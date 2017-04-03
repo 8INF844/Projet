@@ -24,9 +24,6 @@ def StiffnessOn(proxy):
     proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
 
 class Module(ALModule):
-    ''' A simple module able to react
-        to touch events.
-    '''
     def __init__(self, name):
         ALModule.__init__(self, name)
 
@@ -36,7 +33,7 @@ class Module(ALModule):
         self.motion_proxy  = ALProxy('ALMotion')
         self.posture_proxy = ALProxy('ALRobotPosture')
         self.speech_recognition = ALProxy('ALSpeechRecognition')
-        self.speech_recognition.setLanguage('English')
+        self.speech_recognition.setLanguage('French')
         self.has_obj = False
 
         # Subscribe to TouchChanged event:
@@ -82,32 +79,21 @@ class Module(ALModule):
         self.posture_proxy.goToPosture('Sit', 0.5)
 
     def detect_word(self, vocabulary):
+        try:
+            self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
+        except:
+            pass
         self.speech_recognition.setVocabulary(vocabulary, False)
-
         self.memory.subscribeToEvent('WordRecognized',
             'AgentNao',
             'onWordRecognized')
-        # TODO self.memory.subscribeToEvent
-        print(self.speech_recognition.getLanguage())
-        self.speech_recognition.subscribe('Test_ASR')
-        print('Speech recognition engine started')
-        time.sleep(5)
-        #words_recognized = self.memory.getData('WordRecognized')
-        print(words_recognized)
-        self.speech_recognition.unsubscribe('Test_ASR')
-        #return words_recognized
 
     def onWordRecognized(self, key, value, message):
-
-        self.memory.unsubscribeToEvent('WordRecognized',
-            'AgentNao')
+        self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
         print("Recognized")
         print(key)
         print(value)
         print(message)
-        self.memory.subscribeToEvent('WordRecognized',
-            'AgentNao',
-            'onWordRecognized')
 
 
     def onTouched(self, strVarName, value):
@@ -146,9 +132,6 @@ class Module(ALModule):
         # Set NAO in Stiffness On
         StiffnessOn(self.motion_proxy)
 
-        # Send NAO to Pose Init
-        self.posture_proxy.goToPosture("StandInit", 0.5)
-
         effector   = "RArm"
         space      = motion.FRAME_ROBOT
         axisMask   = almath.AXIS_MASK_VEL    # just control position
@@ -158,26 +141,27 @@ class Module(ALModule):
         currentPos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         # Define the changes relative to the current position
-        dx         =  0.05      # translation axis X (meters)
+        dx         =  0.1      # translation axis X (meters)
         dy         =  0.0      # translation axis Y (meters)
-        dz         =  0.2      # translation axis Z (meters)
+        dz         =  0.12      # translation axis Z (meters)
         dwx        =  0.00      # rotation axis X (radians)
         dwy        =  0.00      # rotation axis Y (radians)
         dwz        =  0.00      # rotation axis Z (radians)
         targetPos  = [dx, dy, dz, dwx, dwy, dwz]
 
-        # Go to the target and back again # TODO stay in position
-        path       = [targetPos, targetPos, targetPos, currentPos]
-        times      = [2.0, 4.0, 6.0, 8.0] # seconds
+        # Go to the target and back again
+        path       = [currentPos, targetPos]
+        times      = [2.0, 4.0] # seconds
 
-        self.motion_proxy.openHand('RHand')
         self.motion_proxy.positionInterpolation(effector, space, path,
-                                          axisMask, times, isAbsolute)
+                                                axisMask, times, isAbsolute)
+        self.motion_proxy.openHand('RHand')
 
     def drop_object(self):
         self.motion_proxy.wakeUp()
         self.motion_proxy.openHand('RHand')
         self.has_obj = False
+        self.posture_proxy.goToPosture('StandInit', 0.5)
 
     def move_to_other(self):
         self.motion_proxy.moveTo(0, 0, math.pi)
@@ -199,7 +183,8 @@ def main(ip, port):
 
     global AgentNao
     AgentNao = Module('AgentNao')
-    AgentNao.grab_object()
+    vocabulary = ['oui', 'non', 'yes', 'no']
+    words_recognized = AgentNao.detect_word(vocabulary)
     time.sleep(1000)
     client_found = False
     print('wake up')
@@ -224,9 +209,7 @@ def main(ip, port):
         AgentNao.say('Puis-je prendre un objet ?')
 
         # Si oui prendre commande
-        client_found = True
-        # TODO
-        vocabulary = ['yes', 'no']
+        vocabulary = ['oui', 'non', 'yes', 'no']
         words_recognized = AgentNao.detect_word(vocabulary)
         if words_recognized and words_recognized[0] == 'yes':
             client_found = True
@@ -246,8 +229,7 @@ def main(ip, port):
         while True:
             time.sleep(1)
     except KeyboardInterrupt:
-        print
-        print 'Interrupted by user, shutting down'
+        print('Interrupted by user, shutting down')
         broker.shutdown()
         sys.exit(0)
 
