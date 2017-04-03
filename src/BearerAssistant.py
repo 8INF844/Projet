@@ -1,7 +1,7 @@
 # -*- encoding: UTF-8 -*-
-from naoqi import ALProxy, ALBroker, ALModule, GeneratedClass
+from naoqi import ALProxy, ALBroker, ALModule
 
-import argparse
+import argparse, time
 
 class StateMachine():
     def __init__(self, instance):
@@ -47,17 +47,17 @@ class WaitForOwner(State):
         # See if faces have been detected
         time.sleep(0.5)
         val = instance.memory.getData('FaceDetected')
-            if val and isinstance(val, list) and len(val) >= 2:
-                instance.faces = val[1]
-            else:
-                instance.faces = []
-        
+        if val and isinstance(val, list) and len(val) >= 2:
+            instance.faces = val[1]
+        else:
+            instance.faces = []
+
         # DECISION
         if instance.faces:
             instance.state_machine.change_state(OfferHelp)
 
     @staticmethod
-    def process(instance):
+    def exit(instance):
         # Unsubscribe to face recognition event
         instance.face_proxy.unsubscribe('Test_Face')
 
@@ -74,15 +74,23 @@ class Agent(ALModule):
         ALModule.__init__(self, name)
         self.state_machine = StateMachine(self)
         self.initial_state = initial_state
+        self.tts = ALProxy('ALTextToSpeech')
+        self.face_proxy = ALProxy('ALFaceDetection')
+        self.face_proxy.enableTracking(False)
+        self.memory = ALProxy('ALMemory')
+        self.motion_proxy  = ALProxy('ALMotion')
+        self.posture_proxy = ALProxy('ALRobotPosture')
+        self.speech_recognition = ALProxy('ALSpeechRecognition')
+        self.speech_recognition.setLanguage('French')
 
     def start(self):
-        init()
+        self.init()
         try:
             while True:
-                loop()
+                self.loop()
         except KeyboardInterrupt:
             pass
-        end()
+        self.end()
 
     def init(self):
         # Set initial state
@@ -98,10 +106,10 @@ class Agent(ALModule):
 
 class BearerAssistant(Agent):
     def __init__(self, name):
-        Agent.__init__(self, name)
+        Agent.__init__(self, name, WaitForOwner)
 
     def end(self):
-
+        pass
 
 
 
