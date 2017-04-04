@@ -1,0 +1,122 @@
+\documentclass{article}
+\usepackage{natbib}
+\usepackage[francais]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{minted}
+\usepackage{uqac}
+
+% ================================ Meta data (pour titre et autre)
+\discipline{8INF844}
+\supervisor{Abdenour Bouzouane}
+\project{Projet}
+\title{Bearer Assistant}
+\author{Sébastien Blin\\Victor Drouin Viallard}
+
+% ================================ Document
+\begin{document}
+
+\maketitle
+
+\section{Description}
+TODO décrire ce qu'on souhaite mettre en place
+
+
+\section{Installation}
+\subsection{Choregraphe}
+
+Choregraphe est une suite logicielle qui facilite les interactions avec NAOqi (la bibliothèque utilisée pour programmer le Nao en C++ ou Python). On peut l'utiliser pour créer des animations ou des comprotements, tester ces comportements sur des robots simulés ou réels, et obtenir un retour des composants du Nao tel que les deux caméras. On peut décrire les comportements à l'aide de boites (programmation graphique) ou en créant nos propres boites en Python. L'interaction avec NAOqi est simplifiée, mais l'exécution sera plus lente qu'un script Python ou un code C++. [Fig \ref{fig:choregraphe}]
+
+\begin{figure}[h]
+	\begin{center}
+			\includegraphics[scale=0.2]{img/choregraphe}
+		\caption{Choregraphe}
+		\label{fig:choregraphe}
+	\end{center}
+\end{figure}
+
+Pour l'installer il suffit de se rendre sur la page~: \url{https://developer.softbankrobotics.com/us-en/downloads/nao-v5-v4} et de prendre le lien \emph{Choregraphe VERSION PLATFORM Binaries} qui contiendra l'application ainsi que les bibliothèques utiles dans la section suivante.
+
+\subsection{Environnement Python}
+
+Nous avons choisi de ne pas utiliser Choregraphe pour la programmation du robot (pour des raisons de flexibilité, de performances) mais de le contrôler avec Python (version 2, les bibliothèques n'étant pas encore compatible Python 3). Une fois que choregaphe a bien été installé, il suffit de se rendre dans le dossier \emph{/lib} du dossier téléchargé pour obtenir les librairies utilisées en Python et C++. Il suffit alors de copier les librairies que vous souhaitez avec votre projet afin de pouvoir utiliser NAOqi.
+Pour tester, vous pouvez vous rendre dans le dossier où se trouve ces bibliothèques~:
+\begin{verbatim}
+  AmarOk@tars2 ~ : cd Downloads/choregraphe-suite-2.1.4.13-linux64/lib
+  AmarOk@tars2 ~/Downloads/choregraphe-suite-2.1.4.13-linux64/lib : python
+ Python 2.7.13 (default, Jan 12 2017, 17:59:37)
+ [GCC 6.3.1 20161221 (Red Hat 6.3.1-1)] on linux2
+ Type "help", "copyright", "credits" or "license" for more information.
+ >>> import naoqi
+ >>> # Ici vous pouvez utiliser NAOqi
+\end{verbatim}
+
+\subsection{Connexion au robot Nao}
+
+Une fois les outils installés, il est possible de se connecter au Nao afin de le controler.
+La première étape est d'allumer le Nao en le reliant en lien direct à votre PC ou en le connectant au WiFi (s'il est configuré pour se rendre sur un réseau WiFi).
+
+\subsubsection{En lien direct depuis linux}
+
+Il suffit de créer un réseau local avec le Nao. Il existe énormément de moyens de configurer ce réseau. Un des outils possible est de configurer une telle connexion est \emph{nm-connection-editor}. Pour se faire, il suffit d'ouvrir \emph{nm-connection-editor}, d'éditer la connexion ethernet et dans l'onglet \emph{IPv4 Settings}, configurer le type de connexion en \emph{Local-link only}
+
+\begin{figure}[h]
+	\begin{center}
+			\includegraphics[scale=0.2]{img/nm-connection-editor}
+		\caption{nm-connection-editor}
+		\label{fig:nm-connection-editor}
+	\end{center}
+\end{figure}
+
+Après 1 ou 2 minutes, le Nao aura une adresse ip accessible, vous pourrez alors le configurer depuis l'interface du robot (\emph{login: nao, password: nao}). Il sera par exemple possible dans l'onglet connectivité de configurer le Nao pour rejoindre un réseau WiFi.
+
+\subsubsection{En lien direct depuis windows}
+
+TODO
+
+\subsubsection{Via WiFi}
+
+Si le robot a été configuré pour rejoindre un réseau WiFi, il s'y connectera automatiquement et récupérera une IP.
+
+\section{Programmation via Python 2}
+
+\subsection{NAOqi}
+
+\subsubsection{Le broker}
+
+Normalement, le broker est géré de manière transparente. On en a seulement besoin si on souhaite réaliser des modules qui réagissent à un évènement via un callback. Le processus est documenté ici~: \url{http://bx.psu.edu/~thanh/naoqi/dev/python/reacting_to_events.html#python-reacting-to-events}.
+
+\subsubsection{Les proxies}
+
+Un proxy se comporte comme le module qu'il décrit. Par exemple si on utilise un proxy vers \emph{ALTextToSpeech} on aura accès aux méthodes de ce module (comme \emph{say()} par exemple).
+
+\subsection{Les différents modules}
+
+\subsubsection{Synthèse vocale\footnote{\url{http://doc.aldebaran.com/1-14/naoqi/audio/altexttospeech-api.html#altexttospeech-api}}}
+
+Pour utiliser la synthèse vocale du Nao, il suffit de créer un proxy pour \emph{ALTextToSpeech}~:
+%TODO minted !!!!
+\begin{verbatim}
+  from naoqi import ALProxy
+  tts = ALProxy('ALTextToSpeech', IP_NAO, PORT_NAO)
+  tts.setLanguage('French')
+  tts.say('bonjour')
+\end{verbatim}
+
+\subsubsection{Reconnaissance des visages}
+\subsubsection{Postures}
+
+Ce module est utilisé pour mettre le Nao dans une position prédéfinie (comme debout, assis, etc). Les différentes postures sont disponibles ici \url{http://doc.aldebaran.com/2-1/family/robots/postures_robot.html} et la documentation ici \url{http://doc.aldebaran.com/1-14/naoqi/motion/alrobotposture-api.html}
+
+\begin{verbatim}
+  from naoqi import ALProxy
+  posture_proxy = ALProxy('ALRobotPosture', IP_NAO, PORT_NAO)
+  posture_proxy.goToPosture('StandInit', 0.5)
+\end{verbatim}
+
+\subsubsection{Mouvement}
+\subsubsection{Reconnaissance vocale}
+
+\end{document}
