@@ -193,12 +193,118 @@ Ce module est utilisé pour mettre le Nao dans une position prédéfinie (comme 
 \end{minted}
 
 \subsubsection{Mouvement}
-TODO
+Il existe de nombreuses fonctions de faire bouger le robot. La documentation se trouve ici~: \url{http://doc.aldebaran.com/2-1/naoqi/motion/almotion-api.html}
+
+Voici quelques exempless de code pour mouvoir le Nao. Tout d'abord, pour le faire avancer~:
+\begin{minted}{python}
+from naoqi import ALProxy
+from naoqi import ALBroker
+from naoqi import ALModule
+import math
+
+motion_proxy = ALProxy('ALMotion', IP_NAO, PORT_NAO)
+motion_proxy.wakeUp()
+# Le faire faire demi-tour
+motion_proxy.moveTo(0, 0, math.pi)
+# Le faire avancer tout droit
+motion_proxy.moveTo(0.2, 0, 0)
+\end{minted}
+
+Il est aussi possible de contrôler les bras, par exemple faire tendre le bras au robot. Cette partie est plus complexe à prendre en main car il faut manipuler un objet Position6D. La documentation se trouve ici~: \url{http://doc.aldebaran.com/2-1/naoqi/motion/control-cartesian.html#control-cartesian}
+\begin{minted}{python}
+from naoqi import ALProxy
+from naoqi import ALBroker
+from naoqi import ALModule
+import almath
+import math
+import motion
+
+motion_proxy = ALProxy('ALMotion', IP_NAO, PORT_NAO)
+motion_proxy.wakeUp()
+motion_proxy.wakeUp()
+
+effector = 'RArm'
+space = motion.FRAME_ROBOT
+axisMask = almath.AXIS_MASK_VEL    # just control position
+isAbsolute = False
+
+# Since we are in relative, the current position is zero
+currentPos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+# Define the changes relative to the current position
+dx = 0.1      # translation axis X (meters)
+dy = 0.0      # translation axis Y (meters)
+dz = 0.12      # translation axis Z (meters)
+dwx = 0.00      # rotation axis X (radians)
+dwy = 0.00      # rotation axis Y (radians)
+dwz = 0.00      # rotation axis Z (radians)
+targetPos = [dx, dy, dz, dwx, dwy, dwz]
+# Go to the target
+path = [currentPos, targetPos]
+times = [2.0, 4.0]
+
+motion_proxy.positionInterpolation(effector, space, path,
+axisMask, times, isAbsolute)
+motion_proxy.openHand('RHand')
+\end{minted}
+
+Enfin, il est possible de réaliser un module réagissant à une pression sur un des multiples capteurs\footnote{\url{http://doc.aldebaran.com/2-1/family/robots/contact-sensors_robot.html#robot-contact-sensors}}. Par exemple~:
+
+\begin{minted}{python}
+from naoqi import ALProxy
+from naoqi import ALBroker
+from naoqi import ALModule
+
+AgentNao = None
+
+class Module(ALModule):
+    def __init__(self, name):
+        ALModule.__init__(self, name)
+        self.memory = ALProxy('ALMemory')
+        self.memory.subscribeToEvent('TouchChanged', 'AgentNao', 'onTouched')
+
+    def onTouched(self, strVarName, value):
+        ''' This will be called each time a touch
+        is detected.
+
+        '''
+        # Unsubscribe to the event when talking,
+        # to avoid repetitions
+        self.memory.unsubscribeToEvent('TouchChanged', 'AgentNao')
+
+        touched_bodies = []
+        for p in value:
+            if p[1]:
+                print(p[0])
+
+        self.close_hand(touched_bodies)
+
+        # Subscribe again to the event
+        self.memory.subscribeToEvent('TouchChanged', 'AgentNao', 'onTouched')
+
+if __name__ == '__main__':
+    broker = ALBroker('broker', '0.0.0.0', 0, NAO_IP, NAO_PORT)
+
+    global AgentNao
+    AgentNao = Module('AgentNao')
+    vocabulary = ['oui', 'non', 'yes', 'no']
+    words_recognized = AgentNao.detect_word(vocabulary)
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print('Interrupted by user, shutting down')
+        broker.shutdown()
+        sys.exit(0)
+\end{minted}
 
 
 \section{BearerAssistant}
 
 \subsection{Description}
+
+Le sujet de notre projet a été modifié au fur et à mesure de la découverte des APIs du Nao et du temps disponible. Au début, nous souhaitions réaliser un robot assistant qui traduisait une commande en langage des signes. Au final, nous nous sommes orientés vers un robot qui se charge de demander à une personne s'il peut prendre un objet et de l'apporter à une autre personne. Au départ, il se trouve dans une position assise. Il se lève dès qu'il détecte une personne, lui demande s'il peut prendre un objet. Si la personne répond oui, le Nao tend le bras (sinon il retourne au départ) et attend un objet. Une personne lui donne alors l'objet, appuie sur le capteur à l'arrière de la main. Le nao sert sa main, baisse son bras et se retourne. Il cherche alors une nouvelle personne, va vers cette personne et lui lache l'objet. Enfin, il retourne à sa position et se rasseoit.
+
 TODO, dire ce que fait le robot (ou ce qu'on voulait qu'il fasse)
 \subsection{Architecture du code}
 TODO, expliquer l'architecture du code et pourquoi c'est agent
