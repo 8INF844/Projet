@@ -1,7 +1,4 @@
 # -*- encoding: UTF-8 -*-
-''' Say `My {Body_part} is touched` when receiving a touch event
-'''
-
 import almath
 import math
 import motion
@@ -16,12 +13,14 @@ import argparse
 # Global variable to store the AgentNao module instance
 AgentNao = None
 
+
 def StiffnessOn(proxy):
-    #We use the "Body" name to signify the collection of all joints
-    pNames = "Body"
+    """We use the "Body" name to signify the collection of all joints"""
+    pNames = 'Body'
     pStiffnessLists = 1.0
     pTimeLists = 1.0
     proxy.stiffnessInterpolation(pNames, pStiffnessLists, pTimeLists)
+
 
 class Module(ALModule):
     def __init__(self, name):
@@ -30,23 +29,21 @@ class Module(ALModule):
         self.tts = ALProxy('ALTextToSpeech')
         self.face_proxy = ALProxy('ALFaceDetection')
         self.memory = ALProxy('ALMemory')
-        self.motion_proxy  = ALProxy('ALMotion')
+        self.motion_proxy = ALProxy('ALMotion')
         self.posture_proxy = ALProxy('ALRobotPosture')
         self.speech_recognition = ALProxy('ALSpeechRecognition')
         self.speech_recognition.setLanguage('French')
         self.has_obj = False
 
         # Subscribe to TouchChanged event:
-        self.memory.subscribeToEvent('TouchChanged',
-            'AgentNao',
-            'onTouched')
+        self.memory.subscribeToEvent('TouchChanged', 'AgentNao', 'onTouched')
 
     def say(self, text):
         self.tts.say(text)
 
     def face_suscribe(self):
         period = 500
-        self.face_proxy.subscribe('Test_Face', period, 0.0 )
+        self.face_proxy.subscribe('Test_Face', period, 0.0)
 
     def detect_face(self):
         memValue = 'FaceDetected'
@@ -62,7 +59,7 @@ class Module(ALModule):
                     face_info = face_info_array[j]
                     list_faces.append(face_info[0])
                 return list_faces
-        except Exception, e:
+        except Exception:
             pass
         # no face detected
         return None
@@ -84,17 +81,15 @@ class Module(ALModule):
         except:
             pass
         self.speech_recognition.setVocabulary(vocabulary, False)
-        self.memory.subscribeToEvent('WordRecognized',
-            'AgentNao',
-            'onWordRecognized')
+        self.memory.subscribeToEvent('WordRecognized', 'AgentNao',
+                                     'onWordRecognized')
 
     def onWordRecognized(self, key, value, message):
         self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
-        print("Recognized")
+        print('Recognized')
         print(key)
         print(value)
         print(message)
-
 
     def onTouched(self, strVarName, value):
         ''' This will be called each time a touch
@@ -103,8 +98,7 @@ class Module(ALModule):
         '''
         # Unsubscribe to the event when talking,
         # to avoid repetitions
-        self.memory.unsubscribeToEvent('TouchChanged',
-            'AgentNao')
+        self.memory.unsubscribeToEvent('TouchChanged', 'AgentNao')
 
         touched_bodies = []
         for p in value:
@@ -114,16 +108,14 @@ class Module(ALModule):
         self.close_hand(touched_bodies)
 
         # Subscribe again to the event
-        self.memory.subscribeToEvent('TouchChanged',
-            'AgentNao',
-            'onTouched')
+        self.memory.subscribeToEvent('TouchChanged', 'AgentNao', 'onTouched')
 
     def close_hand(self, bodies):
         if (bodies == []):
             return
         print(bodies)
 
-        if bodies[0] == "RArm":
+        if bodies[0] == 'RArm':
             self.motion_proxy.closeHand('RHand')
             self.has_obj = True
 
@@ -132,26 +124,26 @@ class Module(ALModule):
         # Set NAO in Stiffness On
         StiffnessOn(self.motion_proxy)
 
-        effector   = "RArm"
-        space      = motion.FRAME_ROBOT
-        axisMask   = almath.AXIS_MASK_VEL    # just control position
+        effector = 'RArm'
+        space = motion.FRAME_ROBOT
+        axisMask = almath.AXIS_MASK_VEL    # just control position
         isAbsolute = False
 
         # Since we are in relative, the current position is zero
         currentPos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
         # Define the changes relative to the current position
-        dx         =  0.1      # translation axis X (meters)
-        dy         =  0.0      # translation axis Y (meters)
-        dz         =  0.12      # translation axis Z (meters)
-        dwx        =  0.00      # rotation axis X (radians)
-        dwy        =  0.00      # rotation axis Y (radians)
-        dwz        =  0.00      # rotation axis Z (radians)
-        targetPos  = [dx, dy, dz, dwx, dwy, dwz]
+        dx = 0.1      # translation axis X (meters)
+        dy = 0.0      # translation axis Y (meters)
+        dz = 0.12      # translation axis Z (meters)
+        dwx = 0.00      # rotation axis X (radians)
+        dwy = 0.00      # rotation axis Y (radians)
+        dwz = 0.00      # rotation axis Z (radians)
+        targetPos = [dx, dy, dz, dwx, dwy, dwz]
 
         # Go to the target and back again
-        path       = [currentPos, targetPos]
-        times      = [2.0, 4.0] # seconds
+        path = [currentPos, targetPos]
+        times = [2.0, 4.0]
 
         self.motion_proxy.positionInterpolation(effector, space, path,
                                                 axisMask, times, isAbsolute)
@@ -174,12 +166,7 @@ def main(ip, port):
     # We need this broker to be able to construct
     # NAOqi modules and subscribe to other modules
     # The broker must stay alive until the program exists
-    broker = ALBroker('broker',
-       '0.0.0.0',   # listen to anyone
-       0,           # find a free port and use it
-       ip,          # parent broker IP
-       port)        # parent broker port
-
+    broker = ALBroker('broker', '0.0.0.0', 0, ip, port)
 
     global AgentNao
     AgentNao = Module('AgentNao')
@@ -216,7 +203,6 @@ def main(ip, port):
             AgentNao.say('Que voulez-vous ?')
         else:
             AgentNao.say('D\'accord')
-
 
     AgentNao.grab_object()
     while not AgentNao.has_obj:

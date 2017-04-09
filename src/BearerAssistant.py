@@ -7,12 +7,12 @@ import argparse
 
 class BearerAssistant(StatesAgent):
     def __init__(self, *args, **kwargs):
-        Agent.__init__(self, name, WaitForOwner)
+        StatesAgent.__init__(self, name, WaitForOwner)
         self.face_proxy.enableTracking(False)
         self.speech_recognition.setLanguage('French')
 
     def init(self):
-        self.state_machine.change_state(WaitForOwner):
+        self.state_machine.change_state(WaitForOwner)
 
 
 if __name__ == '__main__':
@@ -33,6 +33,5 @@ if __name__ == '__main__':
 
     # Initialize and start bearer assistant
     global bearer_assistant
-    bearer_assistant = BearerAssistant('bearer_assistant', ip, port)
+    bearer_assistant = BearerAssistant('bearer_assistant', args.ip, args.port)
     bearer_assistant.start()
-

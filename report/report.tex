@@ -43,7 +43,7 @@ Pour l'installer il suffit de se rendre sur la page~: \url{https://developer.sof
 
 Nous avons choisi de ne pas utiliser Choregraphe pour la programmation du robot (pour des raisons de flexibilité, de performances) mais de le contrôler avec Python (version 2, les bibliothèques n'étant pas encore compatible Python 3). Une fois que choregaphe a bien été installé, il suffit de se rendre dans le dossier \emph{/lib} du dossier téléchargé pour obtenir les librairies utilisées en Python et C++. Il suffit alors de copier les librairies que vous souhaitez avec votre projet afin de pouvoir utiliser NAOqi.
 Pour tester, vous pouvez vous rendre dans le dossier où se trouve ces bibliothèques~:
-\begin{verbatim}
+\begin{minted}{python}
   AmarOk@tars2 ~ : cd Downloads/choregraphe-suite-2.1.4.13-linux64/lib
   AmarOk@tars2 ~/Downloads/choregraphe-suite-2.1.4.13-linux64/lib : python
  Python 2.7.13 (default, Jan 12 2017, 17:59:37)
@@ -51,7 +51,7 @@ Pour tester, vous pouvez vous rendre dans le dossier où se trouve ces biblioth�
  Type "help", "copyright", "credits" or "license" for more information.
  >>> import naoqi
  >>> # Ici vous pouvez utiliser NAOqi
-\end{verbatim}
+\end{minted}
 
 \subsection{Connexion au robot Nao}
 
@@ -97,26 +97,114 @@ Un proxy se comporte comme le module qu'il décrit. Par exemple si on utilise un
 \subsubsection{Synthèse vocale\footnote{\url{http://doc.aldebaran.com/1-14/naoqi/audio/altexttospeech-api.html#altexttospeech-api}}}
 
 Pour utiliser la synthèse vocale du Nao, il suffit de créer un proxy pour \emph{ALTextToSpeech}~:
-%TODO minted !!!!
-\begin{verbatim}
+
+\begin{minted}{python}
   from naoqi import ALProxy
   tts = ALProxy('ALTextToSpeech', IP_NAO, PORT_NAO)
   tts.setLanguage('French')
   tts.say('bonjour')
-\end{verbatim}
+\end{minted}
 
 \subsubsection{Reconnaissance des visages}
+
+La reconnaissance des visages se fait à l'aide du proxy \emph{ALFaceDetection} qui se charge d'écrire dans la mémoire s'il détecte un visage. Voici un code de base~:
+
+\begin{minted}{python}
+  from naoqi import ALProxy
+  import time
+
+  face_proxy = ALProxy('ALFaceDetection', IP_NAO, PORT_NAO)
+  memory = ALProxy('ALMemory', IP_NAO, PORT_NAO)
+  time.sleep(1)
+  val = self.memory.getData('FaceDetected')
+  print(val) # Donne les informations des visages détectés
+\end{minted}
+
+La documentation de l'API est disponible ici~:
+\url{http://doc.aldebaran.com/1-14/naoqi/vision/alfacedetection-api.html#alfacedetection-api}
+
+\subsubsection{Apprentissage et reconnaissance d'objets}
+
+Une des méthodes pour utiliser la reconnaissance d'objets du Nao est d'utiliser \emph{Choregraphe} (la seconde est d'utiliser une application externe travaillant sur le flux de la caméra, mais ne sera pas détaillée ici).
+La documentation se trouve à cette adresse url~: \url{http://doc.aldebaran.com/1-14/software/choregraphe/tutos/recognize_objects.html} et peut-être utilisé avec \emph{Python} avec le code détaillé ici~: \url{http://doc.aldebaran.com/1-14/naoqi/vision/alvisionrecognition-tuto.html#alvisionrecognition-tuto}
+
+\subsubsection{Reconnaissance vocale}
+Une autre possibilité que nous pouvons mettre en place est de réagir aux évènements. Par exemple, pour la reconnaissance vocale, il est possible de réaliser un module qui réagit à la reconnaissance d'un mot. Il est possible de réaliser un module de ce type (et ainsi éviter le fait de devoir écouter pendant quelques secondes et de regarder si un mot a été reconnu) à l'aide d'un broker personnalisé~:
+
+\begin{minted}{python}
+from naoqi import ALProxy
+from naoqi import ALBroker
+from naoqi import ALModule
+
+AgentNao = None
+
+class Module(ALModule):
+    def __init__(self, name):
+        ALModule.__init__(self, name)
+        self.memory = ALProxy('ALMemory')
+        self.speech_recognition = ALProxy('ALSpeechRecognition')
+        self.speech_recognition.setLanguage('French')
+
+    def detect_word(self, vocabulary):
+        try:
+            self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
+        except:
+            pass
+        self.speech_recognition.setVocabulary(vocabulary, False)
+        self.memory.subscribeToEvent('WordRecognized', 'AgentNao',
+                                     'onWordRecognized')
+
+    def onWordRecognized(self, key, value, message):
+        self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
+        print('Recognized')
+        print(key)
+        print(value)
+        print(message)
+
+if __name__ == '__main__':
+    broker = ALBroker('broker', '0.0.0.0', 0, NAO_IP, NAO_PORT)
+
+    global AgentNao
+    AgentNao = Module('AgentNao')
+    vocabulary = ['oui', 'non', 'yes', 'no']
+    words_recognized = AgentNao.detect_word(vocabulary)
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print('Interrupted by user, shutting down')
+        broker.shutdown()
+        sys.exit(0)
+\end{minted}
+
+
+
+La documentation de l'API de cette partie est disponible ici~: \url{http://doc.aldebaran.com/2-1/naoqi/audio/alspeechrecognition-api.html#alspeechrecognition-api}
+
+
 \subsubsection{Postures}
 
 Ce module est utilisé pour mettre le Nao dans une position prédéfinie (comme debout, assis, etc). Les différentes postures sont disponibles ici \url{http://doc.aldebaran.com/2-1/family/robots/postures_robot.html} et la documentation ici \url{http://doc.aldebaran.com/1-14/naoqi/motion/alrobotposture-api.html}
 
-\begin{verbatim}
+\begin{minted}{python}
   from naoqi import ALProxy
   posture_proxy = ALProxy('ALRobotPosture', IP_NAO, PORT_NAO)
   posture_proxy.goToPosture('StandInit', 0.5)
-\end{verbatim}
+\end{minted}
 
 \subsubsection{Mouvement}
-\subsubsection{Reconnaissance vocale}
+TODO
+
+
+\section{BearerAssistant}
+
+\subsection{Description}
+TODO, dire ce que fait le robot (ou ce qu'on voulait qu'il fasse)
+\subsection{Architecture du code}
+TODO, expliquer l'architecture du code et pourquoi c'est agent
+\subsection{Ce qui a été réalisé}
+TODO, fonctionnalité
+\subsection{Pistes d'amélioration}
+TODO (comment améliorer le Nao, ce qui n'a pas été fait)
 
 \end{document}

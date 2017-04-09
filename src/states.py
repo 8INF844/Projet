@@ -1,6 +1,7 @@
 from core.states import State
 import time
 
+
 class WaitForOwner(State):
     @staticmethod
     def enter(instance):
@@ -18,9 +19,9 @@ class WaitForOwner(State):
         time.sleep(0.5)
         data = instance.memory.getData('FaceDetected')
         if data and isinstance(data, list) and len(data) >= 2:
-            instances.faces = data[1]
+            instance.faces = data[1]
         else:
-            instances.faces = []
+            instance.faces = []
 
         # DECISION
         if instance.faces:
@@ -31,10 +32,10 @@ class WaitForOwner(State):
         # Unsubscribe to face recognition event
         instance.face_detection.unsubscribe('Test_Face')
 
+
 class OfferHelp(State):
     @staticmethod
     def enter(instance):
         # Stand up
         instance.motion.wakeUp()
         instance.posture.goToPosture('StandInit', 0.5)
-
