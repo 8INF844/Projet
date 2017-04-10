@@ -1,5 +1,6 @@
-from naoqi import ALProxy, AlBroker, AlModule
+from naoqi import ALProxy, AlBroker
 from states import StateMachine
+
 
 class DefaultAgent():
     """
@@ -7,7 +8,7 @@ class DefaultAgent():
     """
     def __init__(self, name, ip, port=9559):
         # Initialize broker
-        broker = ALBroker('broker', '0.0.0.0', 0, ip, port)
+        self.broker = AlBroker('broker', '0.0.0.0', 0, ip, port)
         # Initialize standard proxies
         self.text_to_speak = ALProxy('AlTextToSpeech')
         self.face_detection = ALProxy('AlFaceDetection')
@@ -34,13 +35,14 @@ class DefaultAgent():
     def end():
         pass
 
+
 class StatesAgent(DefaultAgent):
     """
     Special agent based on a state machine.
     """
     def __init__(self, *args, **kwargs):
         DefaultAgent.__init__(self, *args, **kwargs)
-        self.state_machine = Statemachine(self)
+        self.state_machine = StateMachine(self)
 
     def init(self):
         pass

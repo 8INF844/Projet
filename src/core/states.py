@@ -19,6 +19,7 @@ class StateMachine():
         if self.state:
             self.state.enter(self.instance)
 
+
 class State():
     """
     The state interface.
@@ -32,5 +33,5 @@ class State():
         pass
 
     @staticmethod
-    def process(instance):
+    def exit(instance):
         pass

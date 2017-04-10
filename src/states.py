@@ -25,7 +25,7 @@ class WaitForOwner(State):
 
         # DECISION
         if instance.faces:
-            instance.state_machine.chenge_state(OfferHelp)
+            instance.state_machine.change_state(OfferHelp)
 
     @staticmethod
     def exit(instance):
@@ -39,3 +39,5 @@ class OfferHelp(State):
         # Stand up
         instance.motion.wakeUp()
         instance.posture.goToPosture('StandInit', 0.5)
+        instance.tts.say('Puis-je prendre un objet ?')
+        instance.tts.say('TODO')  # TODO
