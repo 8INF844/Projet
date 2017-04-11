@@ -80,14 +80,32 @@ class TakeObject(State):
         # Move to person
 
         # Open hand
+        instance.motion_proxy.wakeUp()
+        instance.motion_proxy.stiffnessInterpolation('Body', 1.0, 1.0)
+        effector = 'RArm'
+        space = motion.FRAME_ROBOT
+        axis_mask = almath.AXIS_MASK_VEL
+        is_absolute = False
+        current_pos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        target_pos = [0.1, 0.0, 0.12, 0.0, 0.0, 0.0]
+        path = [curret_pos, target_pos]
+        times = [2.0, 4.0]
+        instance.motion_proxy.positionInterpolation(effector, space, path,
+                axis_mask, times, is_absolute)
+        instance.motion_proxy.openHand(effector)
 
         # Wait for object given
+        instance.memory.subscribeToEvent('TouchChanged', instance.name,
+                'on_touched')
 
     @staticmethod
     def process(instance):
         # Object in ?
-        # > Close hand
-        # > [WaitForSomeoneElse]
+        if 'RArm' in instance.touched_sensors:
+            instance.motion_proxy.closeHand('RHand')
+            instance.touched_sensors = []
+            instance.state_machine.change_state(WaitForSomeoneElse)
+
         # Wait for too long ?
         # > [WaitForOwner]
         pass
@@ -95,6 +113,7 @@ class TakeObject(State):
     @staticmethod
     def exit(instance):
         # Don't wait for object anymore
+        instance.memory.unsubscribeToEvent('TouchChanged', instance.name)
         pass
 
 class WaitForSomeoneElse(State):

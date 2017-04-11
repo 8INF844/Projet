@@ -9,6 +9,7 @@ class BearerAssistant(StatesAgent):
     def __init__(self, name, ip, port=9559):
         StatesAgent.__init__(self, name, ip, port=9559)
         self.words_recognized = []
+        self.touched_sensors = []
 
     def init(self):
         self.state_machine.change_state(OfferHelp)
@@ -20,6 +21,11 @@ class BearerAssistant(StatesAgent):
         print(key)
         print(value)
         print(message)
+
+    def on_touched(self, str_var_name, sensors):
+        for sensor in sensors:
+            if sensor[1]:
+                self.touched_sensors.append(sensor[0])
 
 
 if __name__ == '__main__':
