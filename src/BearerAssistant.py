@@ -11,7 +11,6 @@ class BearerAssistantEventsHandler(ALModule):
         self.agent = agent
 
     def on_word_recognized(self, key, value, message):
-        self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
         print('Recognized')
         print(key)
         print(value)
@@ -20,7 +19,7 @@ class BearerAssistantEventsHandler(ALModule):
     def on_touched(self, str_var_name, sensors):
         for sensor in sensors:
             if sensor[1]:
-                self.touched_sensors.append(sensor[0])
+                self.agent.touched_sensors.append(sensor[0])
 
 class BearerAssistant(StatesAgent):
     def __init__(self, ip, port):
@@ -54,5 +53,5 @@ if __name__ == '__main__':
     bearer_assistant = BearerAssistant(args.ip, args.port)
     # Initialize events handler
     global baeh
-    baeh = BearerAssistantEventsHandler('baeh')
+    baeh = BearerAssistantEventsHandler('baeh', bearer_assistant)
     bearer_assistant.start()
