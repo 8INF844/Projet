@@ -34,6 +34,7 @@ class Module(ALModule):
         self.speech_recognition = ALProxy('ALSpeechRecognition')
         self.speech_recognition.setLanguage('French')
         self.has_obj = False
+        self.words_recognized = None
 
         # Subscribe to TouchChanged event:
         self.memory.subscribeToEvent('TouchChanged', 'AgentNao', 'onTouched')
@@ -43,7 +44,7 @@ class Module(ALModule):
 
     def face_suscribe(self):
         period = 500
-        self.face_proxy.subscribe('Test_Face', period, 0.0)
+        self.face_proxy.subscribe('Test_Face', period, 0.5)
 
     def detect_face(self):
         memValue = 'FaceDetected'
@@ -69,7 +70,7 @@ class Module(ALModule):
 
     def stand_up(self):
         self.motion_proxy.wakeUp()
-        self.posture_proxy.goToPosture('StandInit', 0)
+        self.posture_proxy.goToPosture('StandInit', 0.5)
 
     def sit(self):
         self.motion_proxy.wakeUp()
@@ -80,7 +81,9 @@ class Module(ALModule):
             self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
         except:
             pass
+        self.speech_recognition.pause(True)
         self.speech_recognition.setVocabulary(vocabulary, False)
+        self.speech_recognition.pause(False)
         self.memory.subscribeToEvent('WordRecognized', 'AgentNao',
                                      'onWordRecognized')
 
@@ -88,7 +91,8 @@ class Module(ALModule):
         self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
         print('Recognized')
         print(key)
-        print(value)
+        print('EVENT %s' % value)
+        self.words_recognized = value[0]
         print(message)
 
     def onTouched(self, strVarName, value):
@@ -159,6 +163,23 @@ class Module(ALModule):
         self.motion_proxy.moveTo(0, 0, math.pi)
         self.motion_proxy.moveTo(0.2, 0, 0)
 
+    def move_to_face(self):
+        print('ok')
+        self.face_suscribe()
+        stop = False
+        threshold = .33
+        while not stop:
+            faces = self.detect_face()
+            time.sleep(0.5)
+            print(faces)
+            if faces:
+                first_face = faces[0]
+                if first_face[3] > threshold:
+                    stop = True
+                else:
+                    self.motion_proxy.moveTo(0.1, 0, first_face[0])
+        self.face_unsuscribe()
+
 
 def main(ip, port):
     ''' Main entry point
@@ -167,15 +188,23 @@ def main(ip, port):
     # NAOqi modules and subscribe to other modules
     # The broker must stay alive until the program exists
     broker = ALBroker('broker', '0.0.0.0', 0, ip, port)
+    # broker.shutdown()
 
     global AgentNao
     AgentNao = Module('AgentNao')
-    AgentNao.stand_up()
-    while True:
-        detected = AgentNao.detect_face()
-        print(detected)
     vocabulary = ['oui', 'non', 'yes', 'no']
     words_recognized = AgentNao.detect_word(vocabulary)
+    while not AgentNao.words_recognized:
+        time.sleep(1)
+    print('MOT RECONNU')
+    # AgentNao.stand_up()
+    try:
+        AgentNao.move_to_face()
+    except KeyboardInterrupt:
+        print('Interrupted by user, shutting down')
+        broker.shutdown()
+        sys.exit(0)
+    AgentNao.say('fini')
     time.sleep(1000)
     client_found = False
     print('wake up')
