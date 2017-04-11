@@ -49,7 +49,9 @@ class OfferHelp(State):
             instance.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
         except:
             pass
+        instance.speech_recognition.pause(True)
         instance.speech_recognition.setVocabulary(vocabulary, False)
+        instance.speech_recognition.pause(False)
         instance.memory.subscribeToEvent('WordRecognized', instance.name,
                                          'on_word_recognized')
 
