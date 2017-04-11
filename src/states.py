@@ -20,7 +20,6 @@ class WaitForOwner(State):
     def process(instance):
         print('[WaitForOwner]process')
         # See if faces have been detected
-        time.sleep(0.5)
         data = instance.memory.getData('FaceDetected')
         if data and isinstance(data, list) and len(data) >= 2:
             instance.faces = data[1]
@@ -29,6 +28,7 @@ class WaitForOwner(State):
 
         if instance.faces:
             instance.state_machine.change_state(OfferHelp)
+        time.sleep(0.5)
 
     @staticmethod
     def exit(instance):
@@ -121,7 +121,6 @@ class TakeObject(State):
         print('[TakeObject]exit')
         # Don't wait for object anymore
         instance.memory.unsubscribeToEvent('TouchChanged', 'baeh')
-        pass
 
 
 class WaitForSomeoneElse(State):
@@ -130,42 +129,61 @@ class WaitForSomeoneElse(State):
         print('[WaitForSomeoneElse]exit')
         # Turn 180 degree
         instance.motion.moveTo(0, 0, math.pi)
-        pass
+
         # Wait for new person
+        instance.face_detection.subscribe('Test_Face', 500, 0.0)
 
     @staticmethod
     def process(instance):
-        # Person found ?
-        # > [BringObject]
+        print('[WaitForSomeoneElse]process')
+        # See if faces have been detected
+        data = instance.memory.getData('FaceDetected')
+        if data and isinstance(data, list) and len(data) >= 2:
+            instance.faces = data[1]
+        else:
+            instance.faces = []
+        if instance.faces:
+            instance.state_machine.change_state(BringObject)
+        time.sleep(1)
+
         # Wait for too long
         # > Drop Object
         # > [WaitForOwner]
-        pass
 
     @staticmethod
     def exit(instance):
-        pass
+        print('[WaitForSomeoneElse]exit')
+        # Unsubscribe to face recognition event
+        instance.face_detection.unsubscribe('Test_Face')
 
 
 class BringObject(State):
     @staticmethod
     def enter(instance):
+        print('[BringObject]enter')
         # Move to person
 
         # Wait for person ready
-
-        pass
+        instance.memory.subscribeToEvent('TouchChanged', 'baeh', 'on_touched')
 
     @staticmethod
     def process(instance):
+        print('[BringObject]process')
         # Person ready ?
+        if 'RArm' in instance.touched_sensors:
+            instance.motion.openHand('RHand')
+            instance.touched_sensors = []
+            instance.state_machine.change_state(WaitForOwner)
+
         # > Open hand
         # > [WaitForOwner]
         # Wait for too long ?
         # > Drop object
         # > [WaitForOwner]
-        pass
+        time.sleep(1)
 
     @staticmethod
     def exit(instance):
-        pass
+        print('[BringObject]exit')
+        # Don't wait for object anymore
+        instance.memory.unsubscribeToEvent('TouchChanged', 'baeh')
