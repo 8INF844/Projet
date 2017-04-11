@@ -17,6 +17,8 @@ class DefaultAgent():
         self.memory = ALProxy('ALMemory')
         self.motion = ALProxy('ALMotion')
         self.posture = ALProxy('ALRobotPosture')
+        self.autonomous_life = ALProxy('ALAutonomousLife')
+        self.autonomous_life.setState('disabled')
         self.speech_recognition = ALProxy('ALSpeechRecognition')
         self.speech_recognition.setLanguage('French')
 
