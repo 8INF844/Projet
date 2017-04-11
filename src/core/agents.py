@@ -9,6 +9,7 @@ class DefaultAgent():
     def __init__(self, ip, port=9559):
         # Initialize broker
         self.broker = ALBroker('broker', '0.0.0.0', 0, ip, port)
+        # self.broker.shutdown()
         # Initialize standard proxies
         self.text_to_speech = ALProxy('ALTextToSpeech')
         self.face_detection = ALProxy('ALFaceDetection')
@@ -28,14 +29,14 @@ class DefaultAgent():
             pass
         self.end()
 
-    def init():
+    def init(self):
         pass
 
-    def loop():
+    def loop(self):
         pass
 
-    def end():
-        pass
+    def end(self):
+        self.broker.shutdown()
 
 
 class StatesAgent(DefaultAgent):

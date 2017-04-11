@@ -1,5 +1,8 @@
 from core.states import State
 import time
+import motion
+import almath
+import math
 
 
 class WaitForOwner(State):
@@ -44,7 +47,7 @@ class OfferHelp(State):
         # Offer help
         instance.text_to_speech.say('Puis-je prendre un objet ?')
         # Listen to response
-        vocabulary = ['oui', 'non']
+        vocabulary = ['oui', 'non', 'yes', 'no']
         try:
             instance.memory.unsubscribeToEvent('WordRecognized', 'baeh')
         except:
@@ -60,11 +63,12 @@ class OfferHelp(State):
         print('[OfferHelp]process')
         for word in instance.words_recognized:
             print(word)
-            if word['value'] == 'oui':
+            if word in ['yes', 'oui']:
                 instance.state_machine.change_state(TakeObject)
-            elif word['value'] == 'non':
+            elif word in ['non', 'no']:
                 instance.state_machine.change_state(WaitForOwner)
         instance.words_recognized = []
+        time.sleep(1)
 
     @staticmethod
     def exit(instance):
@@ -78,47 +82,54 @@ class TakeObject(State):
     def enter(instance):
         print('[TakeObject]enter')
         # Move to person
+        instance.motion.wakeUp()
 
         # Open hand
-        instance.motion_proxy.wakeUp()
-        instance.motion_proxy.stiffnessInterpolation('Body', 1.0, 1.0)
+        instance.motion.wakeUp()
+        instance.motion.stiffnessInterpolation('Body', 1.0, 1.0)
         effector = 'RArm'
         space = motion.FRAME_ROBOT
         axis_mask = almath.AXIS_MASK_VEL
         is_absolute = False
         current_pos = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
         target_pos = [0.1, 0.0, 0.12, 0.0, 0.0, 0.0]
-        path = [curret_pos, target_pos]
+        path = [current_pos, target_pos]
         times = [2.0, 4.0]
-        instance.motion_proxy.positionInterpolation(effector, space, path,
-                axis_mask, times, is_absolute)
-        instance.motion_proxy.openHand(effector)
+        instance.motion.positionInterpolation(effector, space, path,
+                                              axis_mask, times,
+                                              is_absolute)
+        instance.motion.openHand('RHand')
 
         # Wait for object given
         instance.memory.subscribeToEvent('TouchChanged', 'baeh', 'on_touched')
 
     @staticmethod
     def process(instance):
+        print('[TakeObject]process')
         # Object in ?
         if 'RArm' in instance.touched_sensors:
-            instance.motion_proxy.closeHand('RHand')
+            instance.motion.closeHand('RHand')
             instance.touched_sensors = []
             instance.state_machine.change_state(WaitForSomeoneElse)
 
         # Wait for too long ?
         # > [WaitForOwner]
-        pass
+        time.sleep(1)
 
     @staticmethod
     def exit(instance):
+        print('[TakeObject]exit')
         # Don't wait for object anymore
         instance.memory.unsubscribeToEvent('TouchChanged', 'baeh')
         pass
 
+
 class WaitForSomeoneElse(State):
     @staticmethod
     def enter(instance):
+        print('[WaitForSomeoneElse]exit')
         # Turn 180 degree
+        instance.motion.moveTo(0, 0, math.pi)
         pass
         # Wait for new person
 
@@ -132,8 +143,9 @@ class WaitForSomeoneElse(State):
         pass
 
     @staticmethod
-    def process(instance):
+    def exit(instance):
         pass
+
 
 class BringObject(State):
     @staticmethod

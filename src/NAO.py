@@ -188,7 +188,7 @@ def main(ip, port):
     # NAOqi modules and subscribe to other modules
     # The broker must stay alive until the program exists
     broker = ALBroker('broker', '0.0.0.0', 0, ip, port)
-    # broker.shutdown()
+    broker.shutdown()
 
     global AgentNao
     AgentNao = Module('AgentNao')

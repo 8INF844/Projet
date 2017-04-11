@@ -1,9 +1,10 @@
 # -*- encoding: UTF-8 -*-
 from core import StatesAgent
-from states import OfferHelp
+from states import TakeObject
 from naoqi import ALModule
 
 import argparse
+
 
 class BearerAssistantEventsHandler(ALModule):
     def __init__(self, name, agent):
@@ -11,15 +12,13 @@ class BearerAssistantEventsHandler(ALModule):
         self.agent = agent
 
     def on_word_recognized(self, key, value, message):
-        print('Recognized')
-        print(key)
-        print(value)
-        print(message)
+        self.agent.words_recognized.append(value[0])
 
     def on_touched(self, str_var_name, sensors):
         for sensor in sensors:
             if sensor[1]:
                 self.agent.touched_sensors.append(sensor[0])
+
 
 class BearerAssistant(StatesAgent):
     def __init__(self, ip, port):
@@ -28,9 +27,8 @@ class BearerAssistant(StatesAgent):
         self.touched_sensors = []
 
     def init(self):
-        self.state_machine.change_state(OfferHelp)
+        self.state_machine.change_state(TakeObject)
         # self.state_machine.change_state(WaitForOwner)
-
 
 
 if __name__ == '__main__':
