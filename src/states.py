@@ -46,13 +46,13 @@ class OfferHelp(State):
         # Listen to response
         vocabulary = ['oui', 'non']
         try:
-            instance.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
+            instance.memory.unsubscribeToEvent('WordRecognized', 'baeh')
         except:
             pass
         instance.speech_recognition.pause(True)
         instance.speech_recognition.setVocabulary(vocabulary, False)
         instance.speech_recognition.pause(False)
-        instance.memory.subscribeToEvent('WordRecognized', instance.name,
+        instance.memory.subscribeToEvent('WordRecognized', 'baeh',
                                          'on_word_recognized')
 
     @staticmethod
@@ -70,7 +70,7 @@ class OfferHelp(State):
     def exit(instance):
         print('[OfferHelp]exit')
         # Stop listening to response
-        instance.memory.unsubscribeToEvent('WordRecognized', instance.name)
+        instance.memory.unsubscribeToEvent('WordRecognized', 'baeh')
 
 
 class TakeObject(State):
@@ -95,8 +95,7 @@ class TakeObject(State):
         instance.motion_proxy.openHand(effector)
 
         # Wait for object given
-        instance.memory.subscribeToEvent('TouchChanged', instance.name,
-                'on_touched')
+        instance.memory.subscribeToEvent('TouchChanged', 'baeh', 'on_touched')
 
     @staticmethod
     def process(instance):
@@ -113,7 +112,7 @@ class TakeObject(State):
     @staticmethod
     def exit(instance):
         # Don't wait for object anymore
-        instance.memory.unsubscribeToEvent('TouchChanged', instance.name)
+        instance.memory.unsubscribeToEvent('TouchChanged', 'baeh')
         pass
 
 class WaitForSomeoneElse(State):

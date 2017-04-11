@@ -1,19 +1,14 @@
 # -*- encoding: UTF-8 -*-
 from core import StatesAgent
 from states import OfferHelp
+from naoqi import ALModule
 
 import argparse
 
-
-class BearerAssistant(StatesAgent):
-    def __init__(self, name, ip, port=9559):
-        StatesAgent.__init__(self, name, ip, port=9559)
-        self.words_recognized = []
-        self.touched_sensors = []
-
-    def init(self):
-        self.state_machine.change_state(OfferHelp)
-        # self.state_machine.change_state(WaitForOwner)
+class BearerAssistantEventsHandler(ALModule):
+    def __init__(self, name, agent):
+        ALModule.__init__(self, name)
+        self.agent = agent
 
     def on_word_recognized(self, key, value, message):
         self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
@@ -26,6 +21,17 @@ class BearerAssistant(StatesAgent):
         for sensor in sensors:
             if sensor[1]:
                 self.touched_sensors.append(sensor[0])
+
+class BearerAssistant(StatesAgent):
+    def __init__(self, ip, port):
+        StatesAgent.__init__(self, ip, port=9559)
+        self.words_recognized = []
+        self.touched_sensors = []
+
+    def init(self):
+        self.state_machine.change_state(OfferHelp)
+        # self.state_machine.change_state(WaitForOwner)
+
 
 
 if __name__ == '__main__':
@@ -44,7 +50,9 @@ if __name__ == '__main__':
     )
     args = args_parser.parse_args()
 
-    # Initialize and start bearer assistant
-    global bearer_assistant
-    bearer_assistant = BearerAssistant('bearer_assistant', args.ip, args.port)
+    # Initialize bearer assistant
+    bearer_assistant = BearerAssistant(args.ip, args.port)
+    # Initialize events handler
+    global baeh
+    baeh = BearerAssistantEventsHandler('baeh')
     bearer_assistant.start()
