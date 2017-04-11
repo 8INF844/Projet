@@ -77,4 +77,65 @@ class TakeObject(State):
     @staticmethod
     def enter(instance):
         print('[TakeObject]enter')
-        print('Oui detecte')
+        # Move to person
+
+        # Open hand
+
+        # Wait for object given
+
+    @staticmethod
+    def process(instance):
+        # Object in ?
+        # > Close hand
+        # > [WaitForSomeoneElse]
+        # Wait for too long ?
+        # > [WaitForOwner]
+        pass
+
+    @staticmethod
+    def exit(instance):
+        # Don't wait for object anymore
+        pass
+
+class WaitForSomeoneElse(State):
+    @staticmethod
+    def enter(instance):
+        # Turn 180 degree
+        pass
+        # Wait for new person
+
+    @staticmethod
+    def process(instance):
+        # Person found ?
+        # > [BringObject]
+        # Wait for too long
+        # > Drop Object
+        # > [WaitForOwner]
+        pass
+
+    @staticmethod
+    def process(instance):
+        pass
+
+class BringObject(State):
+    @staticmethod
+    def enter(instance):
+        # Move to person
+
+        # Wait for person ready
+
+        pass
+
+    @staticmethod
+    def process(instance):
+        # Person ready ?
+        # > Open hand
+        # > [WaitForOwner]
+        # Wait for too long ?
+        # > Drop object
+        # > [WaitForOwner]
+        pass
+
+    @staticmethod
+    def exit(instance):
+        pass
