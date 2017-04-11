@@ -7,6 +7,7 @@ class DefaultAgent():
     Base structure of an agent, loading all standard Nao modules.
     """
     def __init__(self, name, ip, port=9559):
+        self.name = name
         # Initialize broker
         self.broker = AlBroker('broker', '0.0.0.0', 0, ip, port)
         # Initialize standard proxies

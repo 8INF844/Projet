@@ -14,7 +14,6 @@ class WaitForOwner(State):
 
     @staticmethod
     def process(instance):
-        # PERCEPTION
         # See if faces have been detected
         time.sleep(0.5)
         data = instance.memory.getData('FaceDetected')
@@ -23,7 +22,6 @@ class WaitForOwner(State):
         else:
             instance.faces = []
 
-        # DECISION
         if instance.faces:
             instance.state_machine.change_state(OfferHelp)
 
@@ -39,5 +37,29 @@ class OfferHelp(State):
         # Stand up
         instance.motion.wakeUp()
         instance.posture.goToPosture('StandInit', 0.5)
+        # Offer help
         instance.tts.say('Puis-je prendre un objet ?')
-        instance.tts.say('TODO')  # TODO
+        # Listen to response
+        vocabulary = ['oui', 'non']
+        instance.speech_recognition.setVocabulary(vocabulary, False)
+        instance.memory.subscribeToEvent('WordRecognition', instance.name,
+                'on_word_recognized')
+
+    @staticmethod
+    def process(instance):
+        for word in instance.words_recognized:
+            if word['value'] == 'oui':
+                instance.state_machine.change_state(TakeObject)
+            elif word['value'] == 'non':
+                instance.state_machine.change_state(WaitForOwner)
+        instance.words_recognized = []
+
+    @staticmethod
+    def exit(instance):
+        # Stop listening to response
+        instance.memory.unsubscribeToEvent('WordRecognized', instance.name)
+
+class TakeObject(State):
+    @staticmethod
+    def enter(instance):
+        print('Oui détecté')

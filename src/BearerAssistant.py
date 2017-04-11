@@ -6,7 +6,7 @@ import argparse
 
 
 class BearerAssistant(StatesAgent):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, name):
         StatesAgent.__init__(self, name, WaitForOwner)
         self.face_proxy.enableTracking(False)
         self.speech_recognition.setLanguage('French')
