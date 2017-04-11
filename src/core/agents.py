@@ -1,4 +1,4 @@
-from naoqi import ALProxy, AlBroker
+from naoqi import ALProxy, ALBroker
 from states import StateMachine
 
 
@@ -9,14 +9,16 @@ class DefaultAgent():
     def __init__(self, name, ip, port=9559):
         self.name = name
         # Initialize broker
-        self.broker = AlBroker('broker', '0.0.0.0', 0, ip, port)
+        self.broker = ALBroker('broker', '0.0.0.0', 0, ip, port)
         # Initialize standard proxies
-        self.text_to_speak = ALProxy('AlTextToSpeech')
-        self.face_detection = ALProxy('AlFaceDetection')
-        self.memory = ALProxy('AlMemory')
-        self.motion = ALProxy('AlMotion')
-        self.posture = ALProxy('AlPosture')
-        self.speech_recognition = ALProxy('AlSpeechRecognition')
+        self.text_to_speech = ALProxy('ALTextToSpeech')
+        self.face_detection = ALProxy('ALFaceDetection')
+        self.face_detection.enableTracking(False)
+        self.memory = ALProxy('ALMemory')
+        self.motion = ALProxy('ALMotion')
+        self.posture = ALProxy('ALRobotPosture')
+        self.speech_recognition = ALProxy('ALSpeechRecognition')
+        self.speech_recognition.setLanguage('French')
 
     def start(self):
         self.init()

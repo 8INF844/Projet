@@ -1,18 +1,25 @@
 # -*- encoding: UTF-8 -*-
-from core.agent import StatesAgent
-from states import WaitForOwner
+from core import StatesAgent
+from states import OfferHelp
 
 import argparse
 
 
 class BearerAssistant(StatesAgent):
-    def __init__(self, name):
-        StatesAgent.__init__(self, name, WaitForOwner)
-        self.face_proxy.enableTracking(False)
-        self.speech_recognition.setLanguage('French')
+    def __init__(self, name, ip, port=9559):
+        StatesAgent.__init__(self, name, ip, port=9559)
+        self.words_recognized = []
 
     def init(self):
-        self.state_machine.change_state(WaitForOwner)
+        self.state_machine.change_state(OfferHelp)
+        # self.state_machine.change_state(WaitForOwner)
+
+    def on_word_recognized(self, key, value, message):
+        self.memory.unsubscribeToEvent('WordRecognized', 'AgentNao')
+        print('Recognized')
+        print(key)
+        print(value)
+        print(message)
 
 
 if __name__ == '__main__':
@@ -20,7 +27,7 @@ if __name__ == '__main__':
     args_parser.add_argument(
         '--ip',
         type=str,
-        default='192.168.0.0.1',
+        default='192.168.0.1',
         help='Adresse IP du robot.'
     )
     args_parser.add_argument(

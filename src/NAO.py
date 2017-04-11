@@ -69,7 +69,7 @@ class Module(ALModule):
 
     def stand_up(self):
         self.motion_proxy.wakeUp()
-        self.posture_proxy.goToPosture('StandInit', 0.5)
+        self.posture_proxy.goToPosture('StandInit', 0)
 
     def sit(self):
         self.motion_proxy.wakeUp()
@@ -170,6 +170,10 @@ def main(ip, port):
 
     global AgentNao
     AgentNao = Module('AgentNao')
+    AgentNao.stand_up()
+    while True:
+        detected = AgentNao.detect_face()
+        print(detected)
     vocabulary = ['oui', 'non', 'yes', 'no']
     words_recognized = AgentNao.detect_word(vocabulary)
     time.sleep(1000)
