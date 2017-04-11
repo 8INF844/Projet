@@ -1,6 +1,6 @@
 # -*- encoding: UTF-8 -*-
 from core import StatesAgent
-from states import TakeObject
+from states import GoToPersonWithObject,  OfferHelp
 from naoqi import ALModule
 
 import argparse
@@ -27,8 +27,8 @@ class BearerAssistant(StatesAgent):
         self.touched_sensors = []
 
     def init(self):
-        self.state_machine.change_state(TakeObject)
-        # self.state_machine.change_state(WaitForOwner)
+        # self.state_machine.change_state(GoToPersonWithObject)
+        self.state_machine.change_state(OfferHelp)
 
 
 if __name__ == '__main__':

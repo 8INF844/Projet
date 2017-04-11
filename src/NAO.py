@@ -167,7 +167,7 @@ class Module(ALModule):
         print('ok')
         self.face_suscribe()
         stop = False
-        threshold = .33
+        threshold = .1
         while not stop:
             faces = self.detect_face()
             time.sleep(0.5)

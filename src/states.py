@@ -10,6 +10,7 @@ class WaitForOwner(State):
     def enter(instance):
         print('[WaitForOwner]enter')
         # Sit
+        instance.autonomous_life.setState('solitary')
         instance.motion.wakeUp()
         instance.posture.goToPosture('Sit', 0.5)
 
@@ -64,7 +65,7 @@ class OfferHelp(State):
         for word in instance.words_recognized:
             print(word)
             if word in ['yes', 'oui']:
-                instance.state_machine.change_state(TakeObject)
+                instance.state_machine.change_state(GoToPersonWithObject)
             elif word in ['non', 'no']:
                 instance.state_machine.change_state(WaitForOwner)
         instance.words_recognized = []
@@ -77,11 +78,46 @@ class OfferHelp(State):
         instance.memory.unsubscribeToEvent('WordRecognized', 'baeh')
 
 
+class GoToPersonWithObject(State):
+    @staticmethod
+    def enter(instance):
+        print('[GoToPersonWithObject]enter')
+        instance.autonomous_life.setState('solitary')
+        instance.face_detection.subscribe('Test_Face', 500, 0.5)
+
+    @staticmethod
+    def process(instance):
+        print('[GoToPersonWithObject]process')
+
+        data = instance.memory.getData('FaceDetected')
+        if data and isinstance(data, list) and len(data) >= 2:
+            instance.faces = data[1]
+        else:
+            instance.faces = None
+
+        threshold = 0.1
+        if instance.faces:
+            first_face = instance.faces[0][0]
+            print(first_face)
+            if first_face[3] < threshold:
+                print(first_face)
+                d = math.sqrt(1.25 * math.pow(threshold / first_face[3], 2) - 1) - 0.5
+                print(d)
+                instance.motion.moveTo(d, 0, first_face[1])  # parachute
+            instance.state_machine.change_state(TakeObject)
+        time.sleep(0.5)
+
+    @staticmethod
+    def exit(instance):
+        print('[GoToPersonWithObject]exit')
+        instance.face_detection.unsubscribe('Test_Face')
+
+
 class TakeObject(State):
     @staticmethod
     def enter(instance):
         print('[TakeObject]enter')
-        # Move to person
+        instance.autonomous_life.setState('disabled')
         instance.motion.wakeUp()
 
         # Open hand
@@ -143,7 +179,7 @@ class WaitForSomeoneElse(State):
         else:
             instance.faces = []
         if instance.faces:
-            instance.state_machine.change_state(BringObject)
+            instance.state_machine.change_state(MoveToOtherPerson)
         time.sleep(1)
 
         # Wait for too long
@@ -157,7 +193,42 @@ class WaitForSomeoneElse(State):
         instance.face_detection.unsubscribe('Test_Face')
 
 
-class BringObject(State):
+class MoveToOtherPerson(State):
+    @staticmethod
+    def enter(instance):
+        print('[GoToPersonWithObject]enter')
+        instance.autonomous_life.setState('solitary')
+        instance.face_detection.subscribe('Test_Face', 500, 0.5)
+
+    @staticmethod
+    def process(instance):
+        print('[GoToPersonWithObject]process')
+
+        data = instance.memory.getData('FaceDetected')
+        if data and isinstance(data, list) and len(data) >= 2:
+            instance.faces = data[1]
+        else:
+            instance.faces = None
+
+        threshold = 0.1
+        if instance.faces:
+            first_face = instance.faces[0][0]
+            print(first_face)
+            if first_face[3] < threshold:
+                print(first_face)
+                d = math.sqrt(1.25 * math.pow(threshold / first_face[3], 2) - 1) - 0.5
+                print(d)
+                instance.motion.moveTo(d, 0, first_face[1])  # parachute
+            instance.state_machine.change_state(ReleaseObject)
+        time.sleep(0.5)
+
+    @staticmethod
+    def exit(instance):
+        print('[GoToPersonWithObject]exit')
+        instance.face_detection.unsubscribe('Test_Face')
+
+
+class ReleaseObject(State):
     @staticmethod
     def enter(instance):
         print('[BringObject]enter')
