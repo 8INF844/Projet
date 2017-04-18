@@ -21,7 +21,7 @@
 \maketitle
 
 \section{Description}
-TODO décrire ce qu'on souhaite mettre en place
+Le but de ce projet était d'utiliser le Nao pour réaliser un projet de Système Multi-agents. Après plusieurs modifications et par manque de temps pour mettre en place un projet plus grand, le Nao est utilisé pour transmettre l'objet d'une personne à une autre. Ce projet a été décomposé en deux parties. La première est de réaliser un tutoriel pour l'usage des prochains groupes. Le second est de réaliser le projet décrit plus haut avec une approche multi-agents.
 
 
 \section{Installation}
@@ -72,9 +72,9 @@ Il suffit de créer un réseau local avec le Nao. Il existe énormément de moye
 
 Après 1 ou 2 minutes, le Nao aura une adresse ip accessible, vous pourrez alors le configurer depuis l'interface du robot (\emph{login: nao, password: nao}). Il sera par exemple possible dans l'onglet connectivité de configurer le Nao pour rejoindre un réseau WiFi.
 
-\subsubsection{En lien direct depuis windows}
+\subsubsection{Depuis n'importe quelle plateforme}
 
-TODO
+Une seconde solution possible est de relier Nao à un routeur en ethernet et de se connecter à ce routeur par ethernet ou Wifi, ce qui permettera d'y accéder depuis l'adresse IP que le Nao aura obtenu après quelques minutes. (Il est aussi possible de le faire en lien direct, mais la procédure n'a pas été testé ici).
 
 \subsubsection{Via WiFi}
 
@@ -305,12 +305,23 @@ if __name__ == '__main__':
 
 Le sujet de notre projet a été modifié au fur et à mesure de la découverte des APIs du Nao et du temps disponible. Au début, nous souhaitions réaliser un robot assistant qui traduisait une commande en langage des signes. Au final, nous nous sommes orientés vers un robot qui se charge de demander à une personne s'il peut prendre un objet et de l'apporter à une autre personne. Au départ, il se trouve dans une position assise. Il se lève dès qu'il détecte une personne, lui demande s'il peut prendre un objet. Si la personne répond oui, le Nao tend le bras (sinon il retourne au départ) et attend un objet. Une personne lui donne alors l'objet, appuie sur le capteur à l'arrière de la main. Le nao sert sa main, baisse son bras et se retourne. Il cherche alors une nouvelle personne, va vers cette personne et lui lache l'objet. Enfin, il retourne à sa position et se rasseoit.
 
-TODO, dire ce que fait le robot (ou ce qu'on voulait qu'il fasse)
-\subsection{Architecture du code}
-TODO, expliquer l'architecture du code et pourquoi c'est agent
 \subsection{Ce qui a été réalisé}
-TODO, fonctionnalité
+
+Au final, un prototype réalisant les fonctionnalités listées plus haut a été réalisé. Le code est réalisé sous forme d'agent réactif basé sur une machine d'états et des modules pouvant réagir aux évènements afin de réagir lorsqu'une personne touche les capteurs ou lorsque le Nao détecte une personne. Ainsi le code est décomposé comme il suit~:
+
+\begin{itemize}
+	\item \emph{BearerAssistant} est notre Agent contenant une machine à états
+	\item \emph{BearerAssistantEventsHandler} est la partie récupérant les différents évènements de l'environnement pour en informer l'agent
+	\item \emph{states.py} contient les différents états de la machine à état. Par exemple l'état \emph{WaitForOwner} rend le Nao en attente qu'un visage soit observé.
+	\item \emph{BearerAssistant} est notre Agent contenant une machine à états
+	\item \emph{core/agents.py} contient la définition de base d'un agent contenant une machine à état et les proxies vers les différents modules utilisés
+	\item \emph{core/states.py} contient la base d'une machine à état et d'un état.
+\end{itemize}
+
 \subsection{Pistes d'amélioration}
-TODO (comment améliorer le Nao, ce qui n'a pas été fait)
+
+Tout d'abord, au niveau du code, on peut trouver quelques limites au niveau de certaines API (par exemple, la reconnaissance vocale qui marche mal ou la vision par ordinateur qui est obscure, c'est-à-dire sans retour visuel hors quelques données textuelles). Il serait donc préférable de traiter les flux sur une partie plus flexible.
+Une seconde piste d'améliorations serait de trouver un projet nécessitant une communication entre plusieurs robots Nao.
+Enfin, il serait aussi intéressant de regarder du côté des API que nous n'avons pas eu le temps d'utiliser comme l'apprentissage de nouveaux objets.
 
 \end{document}
