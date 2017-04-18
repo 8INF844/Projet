@@ -244,7 +244,7 @@ class ReleaseObject(State):
         if 'RArm' in instance.touched_sensors:
             instance.motion.openHand('RHand')
             instance.touched_sensors = []
-            instance.state_machine.change_state(WaitForOwner)
+            instance.state_machine.change_state(TellJoke)
 
         # > Open hand
         # > [WaitForOwner]
@@ -258,3 +258,13 @@ class ReleaseObject(State):
         print('[BringObject]exit')
         # Don't wait for object anymore
         instance.memory.unsubscribeToEvent('TouchChanged', 'baeh')
+
+class TellJoke(State):
+    @staticmethod
+    def process(instance):
+        time.sleep(60)
+        instance.text_to_speech.say('Oh ! Désolé de te couper mais je viens de me souvenir d\'une blague bien drole.')
+        time.sleep(5)
+        instance.text_to_speech.say('Un jour Dieu dit à Casto de ramer. Depuis Castorama...')
+
+        instance.state_machine.change_state(WaitForOwner)
